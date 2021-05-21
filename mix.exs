@@ -1,4 +1,7 @@
 defmodule Revision.Umbrella.MixProject do
+  @moduledoc """
+  Umbrella Application for our Revision application
+  """
   use Mix.Project
 
   def project do
