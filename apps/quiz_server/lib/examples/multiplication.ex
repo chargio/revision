@@ -3,23 +3,23 @@ defmodule QuizServer.Examples.Multiplication do
   A ready made example that solves all elements in the process.
   It creates a multiplication table to check
   """
-  alias QuizServer.Core.{Template, Quiz}
+  alias QuizServer.Core.{Template, Quiz, Response, Question}
 
   @table_integers 1..10
 
-  def multiplication_checker(subs, answer) do
+  def multiplication_solution(subs) do
     left = Keyword.fetch!(subs, :left)
     right = Keyword.fetch!(subs, :right)
-    String.trim(answer) == to_string(left * right)
+    Integer.to_string(left * right)
   end
 
   def template_fields(overrides) do
     Keyword.merge(
       [
-        name: "Multiplication",
+        name: "Multiplicación",
         instructions: "Multiplique los dos números",
         raw: "<%= @left %> * <%= @right %>",
-        checker: &multiplication_checker/2
+        solutioner: &multiplication_solution/1
       ],
       overrides
     )
@@ -29,6 +29,27 @@ defmodule QuizServer.Examples.Multiplication do
     overrides
     |> template_fields()
     |> Template.new()
+  end
+
+  def question_fields(overrides \\ []) do
+    Keyword.merge(
+      [
+        template: build_template(),
+        parameters: [left: 7, right: 8]
+      ],
+      overrides
+    )
+  end
+
+  def build_question(overrides \\ []) do
+    fields =
+      overrides
+      |> question_fields()
+
+    template = Keyword.get(fields, :template, nil)
+    parameters = Keyword.get(fields, :parameters, nil)
+
+    Question.new(template, parameters)
   end
 
   def multiplication_input_generator(number_or_list \\ 7)
@@ -41,7 +62,7 @@ defmodule QuizServer.Examples.Multiplication do
     for i <- list_of_numbers, j <- @table_integers, do: [left: i, right: j]
   end
 
-  def quiz_fields(overrides) do
+  def quiz_fields(overrides \\ []) do
     Keyword.merge(
       [
         title: "Tabla del 7",

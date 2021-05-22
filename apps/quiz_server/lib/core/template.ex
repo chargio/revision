@@ -10,11 +10,17 @@ defmodule QuizServer.Core.Template do
   <future> Alternatives: a generator of viable alternatives for the question
   """
 
-  @enforce_keys ~w[name instructions raw checker]a
-  defstruct ~w[name instructions raw compiled checker]a
+  @enforce_keys ~w[name instructions raw solutioner]a
+  defstruct ~w[name instructions raw compiled solutioner]a
 
   def new(fields) do
-    raw = Keyword.fetch!(fields, :raw)
+    # Let's make the exception to  be of the same type that the rest
+    raw =
+      try do
+        Keyword.fetch!(fields, :raw)
+      rescue
+        _exception -> reraise ArgumentError, __STACKTRACE__
+      end
 
     # Compile the raw template into something actionable
     struct!(

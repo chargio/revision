@@ -2,21 +2,23 @@ defmodule QuizServer.Core.Response do
   @moduledoc """
   Response provided by a user to a Question
   """
-  @enforce_keys ~w[quiz_title template question id answer]a
-  defstruct ~w[quiz_title template question id answer correct timestamp]a
+  @enforce_keys ~w[id template question]a
+  defstruct ~w[template question id answer correct timestamp]a
 
-  def new(quiz, id, answer) do
-    question = quiz.current_question
-    template = quiz.template
+  def new(question: question, id: id, answer: answer) do
+    template = question.template
 
     %__MODULE__{
       id: id,
-      quiz_title: quiz.title,
       question: question,
       template: template,
       answer: answer,
-      correct: template.checker.(question.parameters, answer),
+      correct: is_correct?(question, answer),
       timestamp: DateTime.utc_now()
     }
+  end
+
+  defp is_correct?(question, answer) do
+    answer == question.solution
   end
 end
