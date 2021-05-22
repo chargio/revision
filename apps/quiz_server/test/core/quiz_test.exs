@@ -1,5 +1,7 @@
 defmodule QuizTest do
-  # Template.new(name: "hola", instructions: "fill the gap", raw: "<%= @left %> * <%= @right %>", checker: checker)
+  @moduledoc """
+  Tests for Quiz
+  """
   use ExUnit.Case
 
   alias QuizServer.Examples.Multiplication
@@ -162,6 +164,21 @@ defmodule QuizTest do
       new_question_quiz = Quiz.next_question(new_quiz)
 
       refute is_nil(new_question_quiz.current_question)
+    end
+
+    test "answering a question that is not the current one returns an error", %{quiz: quiz} do
+      old_response = Response.new(question: quiz.current_question, id: @valid_id, answer: "wrong")
+      new_quiz = Quiz.answer_current_question(quiz, old_response)
+
+      assert is_nil(new_quiz.current_question)
+
+      new_question_quiz = Quiz.next_question(new_quiz)
+
+      refute is_nil(new_question_quiz.current_question)
+
+      wrong_question = Quiz.answer_current_question(new_question_quiz, old_response)
+
+      assert {:error, _} = wrong_question.last_response
     end
   end
 end

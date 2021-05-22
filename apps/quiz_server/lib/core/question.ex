@@ -4,7 +4,7 @@ defmodule QuizServer.Core.Question do
   """
   alias QuizServer.Core.Template
   @enforce_keys [:template, :parameters]
-  defstruct ~w[asked template parameters answer solution]a
+  defstruct ~w[asked template parameters solution]a
 
   def new(%Template{} = template, parameters) do
     %__MODULE__{

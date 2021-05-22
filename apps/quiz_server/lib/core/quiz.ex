@@ -63,8 +63,8 @@ defmodule QuizServer.Core.Quiz do
     |> clean_current_question()
   end
 
-  def answer_current_question(_quiz, _response) do
-    {:error, "only current question can be answered"}
+  def answer_current_question(quiz, _response) do
+    quiz |> Map.put(:last_response, {:error, "only current question can be answered"})
   end
 
   @doc """
