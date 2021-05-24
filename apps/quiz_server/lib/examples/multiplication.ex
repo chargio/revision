@@ -3,7 +3,7 @@ defmodule QuizServer.Examples.Multiplication do
   A ready made example that solves all elements in the process.
   It creates a multiplication table to check
   """
-  alias QuizServer.Core.{Template, Quiz, Response, Question}
+  alias QuizServer.Core.{Template, Quiz, Question}
 
   @table_integers 1..10
 
@@ -13,10 +13,10 @@ defmodule QuizServer.Examples.Multiplication do
     Integer.to_string(left * right)
   end
 
-  def template_fields(overrides) do
+  def template_fields(overrides \\ []) do
     Keyword.merge(
       [
-        name: "Multiplicación",
+        name: :multiplication,
         instructions: "Multiplique los dos números",
         raw: "<%= @left %> * <%= @right %>",
         solutioner: &multiplication_solution/1

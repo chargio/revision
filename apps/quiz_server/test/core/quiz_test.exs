@@ -119,7 +119,6 @@ defmodule QuizTest do
     test "anwering correctly and incorrectly increases record", %{quiz: quiz} do
       quiz = Quiz.reset_quiz(quiz)
 
-
       response =
         Response.new(
           question: quiz.current_question,
@@ -130,13 +129,12 @@ defmodule QuizTest do
       assert quiz.record[:good] == 0
       assert quiz.record[:bad] == 0
 
-      good_answer =
-        Quiz.answer_current_question(quiz, response)
+      good_answer = Quiz.answer_current_question(quiz, response)
 
       assert good_answer.record[:good] == 1
       assert good_answer.correct == [response]
 
-      with_next_question = (good_answer |> Quiz.next_question)
+      with_next_question = good_answer |> Quiz.next_question()
 
       bad_response =
         Response.new(
@@ -150,7 +148,6 @@ defmodule QuizTest do
       assert bad_answer.record[:good] == 1
       assert bad_answer.record[:bad] == 1
       assert bad_answer.incorrect == [bad_response]
-
     end
 
     test "asking for next question returns a new question if there is no current question", %{
