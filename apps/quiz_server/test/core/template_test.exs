@@ -7,6 +7,24 @@ defmodule TemplateTest do
   alias QuizServer.Examples.Multiplication
   alias QuizServer.Core.Template
 
+
+  test "a new Template reflect the parameters used" do
+    fields = Multiplication.template_fields()
+    template = Template.new(fields)
+
+    assert fields[:name] == template.name
+    assert fields[:instructions] == template.instructions
+    assert fields[:solutioner] == template.solutioner
+    assert fields[:raw] == template.raw
+  end
+
+  test "you can change imput parameters" do
+    fields = Multiplication.template_fields(name: :name, instructions: "template.instructions")
+
+    assert fields[:name] == :name
+    assert fields[:instructions] == "template.instructions"
+  end
+
   test "building a test compiles the raw template" do
     fields = Multiplication.template_fields([])
     template = Template.new(fields)
@@ -19,7 +37,9 @@ defmodule TemplateTest do
     fields = Multiplication.template_fields([]) |> Keyword.delete(:name)
 
     assert_raise ArgumentError, fn -> Template.new(fields) end
+
   end
+
 
   test "building a test requires instructions and raises an error" do
     fields = Multiplication.template_fields([]) |> Keyword.delete(:instructions)

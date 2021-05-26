@@ -10,6 +10,10 @@ defmodule QuizServer.Application do
     children = [
       # Starts a worker by calling: QuizServer.Worker.start_link(arg)
       # {QuizServer.Worker, arg}
+      {QuizServer.Boundary.TemplateManager, [name: QuizServer.Boundary.TemplateManager]},
+      {QuizServer.Boundary.QuizManager, [name: QuizServer.Boundary.QuizManager]},
+      {Registry, [name: QuizServer.Registry.QuizSession, keys: :unique]},
+      {DynamicSupervisor, [name: QuizServer.Supervisor.QuizSession, strategy: :one_for_one]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

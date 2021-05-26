@@ -5,6 +5,10 @@ defmodule QuizServer.Boundary.TemplateManager do
   alias QuizServer.Core.Template
   use GenServer
 
+  def start_link(options \\ []) do
+    GenServer.start_link(__MODULE__, %{}, options)
+  end
+
   def init(templates) when is_map(templates) do
     {:ok, templates}
   end

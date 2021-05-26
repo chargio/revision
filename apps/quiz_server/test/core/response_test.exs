@@ -46,7 +46,7 @@ defmodule ResponseTest do
     test "response has the date when it was created", %{question: question} do
       right = Response.new(question: question, id: "XYZ", answer: question.solution)
       assert %DateTime{} = right.timestamp
-      assert right.timestamp < DateTime.utc_now()
+      assert DateTime.compare(right.timestamp, DateTime.utc_now()) == :lt
     end
   end
 end
