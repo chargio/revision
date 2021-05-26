@@ -76,63 +76,62 @@ defmodule Test.Boundary.ValidatorTest do
     end
   end
 
-    describe "validating base functions" do
-      test "validate is_string works on strings and not strings" do
-        errors = []
+  describe "validating base functions" do
+    test "validate is_string works on strings and not strings" do
+      errors = []
 
-        assert Validator.validate_with_function(
-                 errors,
-                 @fields,
-                 [:string1, :string2],
-                 &Validator.validate_is_string/1
-               ) == []
+      assert Validator.validate_with_function(
+               errors,
+               @fields,
+               [:string1, :string2],
+               &Validator.validate_is_string/1
+             ) == []
 
-        assert Validator.validate_with_function(
-                 errors,
-                 @fields,
-                 [:atom1, :string1],
-                 &Validator.validate_is_string/1
-               ) == [atom1: "must be a string"]
+      assert Validator.validate_with_function(
+               errors,
+               @fields,
+               [:atom1, :string1],
+               &Validator.validate_is_string/1
+             ) == [atom1: "must be a string"]
 
-        assert Validator.validate_with_function(
-                 errors,
-                 @fields,
-                 [:string1, :string2, :non_existing],
-                 &Validator.validate_is_string/1
-               ) == errors
-      end
-
-      test "validate is_function works on functions and not functions" do
-        errors = []
-
-        assert Validator.validate_with_function(
-                 errors,
-                 @fields,
-                 [:func],
-                 &Validator.validate_is_function/1
-               ) == errors
-
-        assert Validator.validate_with_function(
-                 errors,
-                 @fields,
-                 [:func],
-                 &Validator.validate_is_function(&1, 1)
-               ) == errors
-
-        assert Validator.validate_with_function(
-                 errors,
-                 @fields,
-                 [:string1, :string2, :func],
-                 &Validator.validate_is_function/1
-               ) == [{:string1, "must be a function"}, {:string2, "must be a function"}]
-
-
-        assert Validator.validate_with_function(
-          errors,
-          @fields,
-          [:func, :non_existing, :string1],
-          &Validator.validate_is_function/1
-        ) == [string1: "must be a function"]
-      end
+      assert Validator.validate_with_function(
+               errors,
+               @fields,
+               [:string1, :string2, :non_existing],
+               &Validator.validate_is_string/1
+             ) == errors
     end
+
+    test "validate is_function works on functions and not functions" do
+      errors = []
+
+      assert Validator.validate_with_function(
+               errors,
+               @fields,
+               [:func],
+               &Validator.validate_is_function/1
+             ) == errors
+
+      assert Validator.validate_with_function(
+               errors,
+               @fields,
+               [:func],
+               &Validator.validate_is_function(&1, 1)
+             ) == errors
+
+      assert Validator.validate_with_function(
+               errors,
+               @fields,
+               [:string1, :string2, :func],
+               &Validator.validate_is_function/1
+             ) == [{:string1, "must be a function"}, {:string2, "must be a function"}]
+
+      assert Validator.validate_with_function(
+               errors,
+               @fields,
+               [:func, :non_existing, :string1],
+               &Validator.validate_is_function/1
+             ) == [string1: "must be a function"]
+    end
+  end
 end

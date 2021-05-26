@@ -33,7 +33,8 @@ defmodule QuizServer.Boundary.Validator do
   """
   def validate_with_function(errors, fields, field_list, f)
       when is_function(f) and is_list(field_list) do
-    field_list |> Enum.reduce(errors, &validate_with_function(&2, fields, &1, f))
+    field_list
+    |> Enum.reduce(errors, &validate_with_function(&2, fields, &1, f))
   end
 
   def validate_with_function(errors, fields, field_name, f) when is_function(f) do
@@ -76,8 +77,8 @@ defmodule QuizServer.Boundary.Validator do
   defp add_error(:ok, errors, _field_name), do: errors
 
   # If there is a list of errors, add them all
-  # TODO: find if there is any real requirement to do this
-  # defp add_error({:error, messages}, errors, field_name) when is_list(messages) do
+  #  TODO: find if there is any real requirement to do this
+  #  defp add_error({:error, messages}, errors, field_name) when is_list(messages) do
   #  errors ++ Enum.map(messages, &{field_name, &1})
   # end
 
