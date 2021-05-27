@@ -3,11 +3,10 @@ defmodule QuizServer.Boundary.QuizSession do
   Creates an easy interface to call the Session as a service
   """
   alias QuizServer.Core.{Quiz, Response}
-  alias QuizServer.Boundary.QuizManager
 
   use GenServer
 
-  def child_spec({quiz, uid}) do
+  def child_spec({%Quiz{} = quiz, uid}) do
     %{
       id: {__MODULE__, {quiz.title, uid}},
       start: {__MODULE__, :start_link, [{quiz, uid}]},
@@ -15,7 +14,7 @@ defmodule QuizServer.Boundary.QuizSession do
     }
   end
 
-  def start_link({quiz, uid}) do
+  def start_link({%Quiz{} = quiz, uid}) do
     GenServer.start_link(
       __MODULE__,
       {quiz, uid},
@@ -23,24 +22,16 @@ defmodule QuizServer.Boundary.QuizSession do
     )
   end
 
-  def take_quiz(quiz, uid) do
+  def take_quiz(%Quiz{} = quiz, uid) do
     DynamicSupervisor.start_child(
       QuizServer.Supervisor.QuizSession,
       {__MODULE__, {quiz, uid}}
     )
   end
 
-  def via({_title, _uid} = name) do
-    {
-      :via,
-      Registry,
-      {QuizServer.Registry.QuizSession, name}
-    }
-  end
-
-  def init({quiz_name, user_id}) do
-    quiz = QuizManager.lookup_quiz_by_title(quiz_name)
-    {:ok, {quiz, user_id}}
+  @impl true
+  def init({quiz_title, user_id}) do
+    {:ok, {quiz_title, user_id}}
   end
 
   def next_question(name) do
@@ -51,11 +42,13 @@ defmodule QuizServer.Boundary.QuizSession do
     GenServer.call(via(name), {:answer_question, answer})
   end
 
+  @impl true
   def handle_call(:next_question, _from, {quiz, user_id}) do
     quiz = Quiz.next_question(quiz)
     {:reply, quiz.current_question, {quiz, user_id}}
   end
 
+  @impl true
   def handle_call({:answer_question, answer}, _from, {quiz, user_id}) do
     quiz
     |> Quiz.answer_current_question(
@@ -69,5 +62,13 @@ defmodule QuizServer.Boundary.QuizSession do
 
   defp maybe_finish(quiz, user_id) do
     {:reply, {quiz.current_question.asked, quiz.last_response.correct}, {quiz, user_id}}
+  end
+
+  def via({_title, _uid} = name) do
+    {
+      :via,
+      Registry,
+      {QuizServer.Registry.QuizSession, name}
+    }
   end
 end

@@ -3,7 +3,6 @@ defmodule QuizServer.Boundary.QuizManager do
   Creates an easy interface to access a Manager as a Service
   """
   alias QuizServer.Core.Quiz
-  alias QuizServer.Boundary.TemplateManager
 
   use GenServer
 
@@ -19,9 +18,8 @@ defmodule QuizServer.Boundary.QuizManager do
 
   def handle_call({:build_quiz, parameters}, _from, quizzes) do
     title = Keyword.fetch!(parameters, :title)
-    template_name = Keyword.fetch!(parameters, :template_name)
     input_generator = Keyword.fetch!(parameters, :input_generator)
-    template = TemplateManager.lookup_template_by_name(TemplateManager, template_name)
+    template = Keyword.fetch!(parameters, :template)
 
     quiz = Quiz.new(title: title, template: template, input_generator: input_generator)
     new_quizzes = Map.put(quizzes, quiz.title, quiz)
