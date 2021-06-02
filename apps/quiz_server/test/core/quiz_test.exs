@@ -1,23 +1,27 @@
-defmodule QuizTest do
-  @moduledoc """
-  Tests for Quiz
-  """
+defmodule QuizServer.QuizTest do
+  @moduledoc false
+
   use ExUnit.Case
 
   alias QuizServer.Examples.Multiplication
-  alias QuizServer.Core.{Quiz, Question, Response}
-
-  @valid_id "XYZ"
+  alias QuizServer.Core.{Quiz, Response}
 
   def quiz_fields_set(context) do
     {:ok, Map.put(context, :quiz_fields, Multiplication.quiz_fields())}
   end
 
-  def quiz_creation(context) do
-    {:ok, Map.put(context, :quiz, Multiplication.build_quiz())}
+  def quiz_with_question_selected_create(context) do
+    {:ok, quiz} = Multiplication.build_quiz() |> Quiz.next_question()
+    {:ok, Map.put(context, :quiz, quiz)}
   end
 
-  describe "quiz creation" do
+  def quiz_with_two_questions_one_selected(context) do
+    quiz = Multiplication.build_quiz(inputs: [[left: 7, right: 8], [left: 7, right: 7]])
+    {:ok, quiz} = Quiz.next_question(quiz)
+    {:ok, Map.put(context, :quiz, quiz)}
+  end
+
+  describe "Quiz creation" do
     setup [:quiz_fields_set]
 
     test "you can create a quiz", %{quiz_fields: quiz_fields} do
@@ -36,39 +40,22 @@ defmodule QuizTest do
       assert_raise ArgumentError, fn -> Quiz.new(fields) end
     end
 
-    test "creation fails when input_generator is missing", %{quiz_fields: quiz_fields} do
-      fields = Keyword.delete(quiz_fields, :input_generator)
+    test "creation fails when inputs are missing", %{quiz_fields: quiz_fields} do
+      fields = Keyword.delete(quiz_fields, :inputs)
 
       assert_raise ArgumentError, fn -> Quiz.new(fields) end
     end
 
-    test "a new quiz gets x number of questions and selects the first one", %{
-      quiz_fields: quiz_fields
-    } do
-      inputs = quiz_fields[:input_generator].()
-
-      assert length(inputs) > 0
-      quiz = Quiz.new(quiz_fields)
-      # current_question holds the question we are asking
-      assert length(inputs) == length(quiz.questions)
-      assert length(quiz.remaining) == length(inputs) - 1
-    end
-
-    test "a new quiz with a list for input generates x * 10 questions" do
-      generator = fn -> Multiplication.multiplication_input_generator(7..9 |> Enum.to_list()) end
-      inputs = generator.()
-      assert length(inputs) == 3 * 10
-
-      quiz = Multiplication.build_quiz(input_generator: generator)
-
-      assert length(inputs) == length(quiz.questions)
-    end
-
-    test "a newly created quiz has a current question", %{quiz_fields: quiz_fields} do
+    test "a newly created quiz has no current question", %{quiz_fields: quiz_fields} do
       quiz = Quiz.new(quiz_fields)
 
-      assert %Question{} = quiz.current_question
-      assert quiz.template == quiz.current_question.template
+      assert is_nil(quiz.current_question)
+    end
+
+    test "you can't answer if there is no current question", %{quiz_fields: quiz_fields} do
+      quiz = Quiz.new(quiz_fields)
+
+      assert {:no_current_question, ^quiz} = Quiz.answer_question(quiz, "very bad")
     end
 
     test "a newly created quiz has no current answer", %{quiz_fields: quiz_fields} do
@@ -76,106 +63,116 @@ defmodule QuizTest do
 
       assert is_nil(quiz.last_response)
     end
-  end
 
-  describe "answering a question" do
-    setup [:quiz_creation]
-
-    test "reseting a quiz deletes responses and makes thing start from scratch", %{quiz: quiz} do
+    test "reseting a quiz deletes responses and makes questions start from scratch", %{
+      quiz_fields: quiz_fields
+    } do
+      quiz = Quiz.new(quiz_fields)
+      assert is_nil(quiz.current_question)
       new_quiz = Quiz.reset_quiz(quiz)
+      assert is_nil(quiz.current_question)
 
       assert new_quiz.template == quiz.template
       assert new_quiz.title == quiz.title
       assert new_quiz.questions == new_quiz.questions
-      assert new_quiz.input_generator == quiz.input_generator
+      assert new_quiz.inputs == quiz.inputs
       assert new_quiz.incorrect == []
       assert new_quiz.correct == []
       assert new_quiz.record == %{good: 0, bad: 0}
     end
+  end
 
-    test "asking for next question returns the same question if it is not answered", %{
-      quiz: quiz
-    } do
-      refute is_nil(quiz.current_question)
-      advance = Quiz.next_question(quiz)
+  describe "answering questions" do
+    setup [:quiz_with_question_selected_create]
 
-      assert quiz.current_question == advance.current_question
+    test "asking for next question returns the same question until it is answered", %{quiz: quiz} do
+      {:ok, next} = Quiz.next_question(quiz)
+
+      assert next.current_question == quiz.current_question
     end
 
-    test "answer a question leaves with no current question and the answer in last_response", %{
-      quiz: quiz
-    } do
-      response = Response.new(question: quiz.current_question, id: @valid_id, answer: "wrong")
-
-      new_quiz = Quiz.answer_current_question(quiz, response)
+    test "answering a question leaves updates the quiz, no current question and answer in last_response",
+         %{quiz: quiz} do
+      new_quiz = Quiz.answer_question(quiz, "wrong response")
       assert is_nil(new_quiz.current_question)
 
-      assert new_quiz.last_response == response
+      assert %Response{} = new_quiz.last_response
+
       assert new_quiz.record[:good] == 0
       assert new_quiz.record[:bad] == 1
-      assert new_quiz.incorrect == [response]
+      assert new_quiz.incorrect == [new_quiz.last_response]
     end
 
-    test "anwering correctly and incorrectly increases record", %{quiz: quiz} do
-      quiz = Quiz.reset_quiz(quiz)
+    test "it is possible to answer the quizzes with a Response", %{quiz: quiz} do
+      response = Response.new(question: quiz.current_question, response: "wrong")
 
-      response =
-        Response.new(
-          question: quiz.current_question,
-          id: @valid_id,
-          answer: quiz.current_question.solution
-        )
+      answered = Quiz.answer_question(quiz, response)
+      assert %Quiz{} = answered
+
+      assert %Response{} = answered.last_response
+
+      assert answered.incorrect == [response]
+    end
+
+    test "answering correctly and incorrectly increases record values", %{quiz: quiz} do
+      {:ok, quiz} = Quiz.reset_quiz(quiz) |> Quiz.next_question()
 
       assert quiz.record[:good] == 0
       assert quiz.record[:bad] == 0
+      assert quiz.remaining == quiz.questions -- [quiz.current_question]
 
-      good_answer = Quiz.answer_current_question(quiz, response)
+      response1 =
+        Response.new(question: quiz.current_question, response: quiz.current_question.solution)
 
-      assert good_answer.record[:good] == 1
-      assert good_answer.correct == [response]
+      answered1 = Quiz.answer_question(quiz, response1)
 
-      with_next_question = good_answer |> Quiz.next_question()
+      assert answered1.record[:good] == 1
+      assert answered1.record[:bad] == 0
+      assert answered1.correct == [response1]
 
-      bad_response =
-        Response.new(
-          question: with_next_question.current_question,
-          id: @valid_id,
-          answer: "wrong"
-        )
+      assert length(answered1.remaining) == length(answered1.questions) - 1
 
-      bad_answer = Quiz.answer_current_question(with_next_question, bad_response)
+      {:ok, new_question} = Quiz.next_question(answered1)
 
-      assert bad_answer.record[:good] == 1
-      assert bad_answer.record[:bad] == 1
-      assert bad_answer.incorrect == [bad_response]
+      response2 = Response.new(question: new_question.current_question, response: "bad response")
+
+      answered2 = Quiz.answer_question(new_question, response2)
+
+      assert answered2.record[:good] == 1
+      assert answered2.record[:bad] == 1
+
+      assert answered2.correct == [response1]
+      assert answered2.incorrect == [response2]
+
+      assert [response1.question, response2.question] ++ answered2.remaining ==
+               answered2.questions
     end
+  end
 
-    test "asking for next question returns a new question if there is no current question", %{
-      quiz: quiz
-    } do
-      response = Response.new(question: quiz.current_question, id: @valid_id, answer: "wrong")
-      new_quiz = Quiz.answer_current_question(quiz, response)
+  describe "end of quiz" do
+    setup [:quiz_with_two_questions_one_selected]
 
-      assert is_nil(new_quiz.current_question)
+    test "when running out of questions, you get :finished as the result", %{quiz: quiz} do
+      # We create the quiz with two questions, one remaining and one in current question.
+      assert length(quiz.remaining) + 1 == 2
+      # We answer the question (badly) and advance to the next question
+      {:ok, q2} = Quiz.answer_question(quiz, "bad") |> Quiz.next_question()
 
-      new_question_quiz = Quiz.next_question(new_quiz)
+      # There is only one in current_question
+      refute is_nil(q2.current_question)
+      assert length(q2.remaining) + 1 == 1
 
-      refute is_nil(new_question_quiz.current_question)
-    end
+      # We answer the next question, and last, so there is no question remaining.
+      q3 = Quiz.answer_question(q2, "also bad")
 
-    test "answering a question that is not the current one returns an error", %{quiz: quiz} do
-      old_response = Response.new(question: quiz.current_question, id: @valid_id, answer: "wrong")
-      new_quiz = Quiz.answer_current_question(quiz, old_response)
+      # Thers is no current_question, and nothing remaining
+      assert q3.current_question == nil
+      assert length(q3.remaining) == 0
+      assert {:no_current_question, q4} = Quiz.answer_question(q3, "very bad")
 
-      assert is_nil(new_quiz.current_question)
-
-      new_question_quiz = Quiz.next_question(new_quiz)
-
-      refute is_nil(new_question_quiz.current_question)
-
-      wrong_question = Quiz.answer_current_question(new_question_quiz, old_response)
-
-      assert {:error, _} = wrong_question.last_response
+      # Next question returns that is finished
+      assert q4.current_question == nil
+      assert {:finished, _q5} = Quiz.next_question(q4)
     end
   end
 end

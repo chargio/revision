@@ -1,31 +1,40 @@
 defmodule QuizServer.Core.Template do
   @moduledoc """
-  Template of questions that will be asked.
+  Template that enables to create new questions.
 
   Name: the name of the template
-  Instructions: the instructions to be shown when using the template
-  Raw: the text description of the template
-  Compiled: an EEx compiled version of the template used to generate questions
-  Checker: a function to be sure that the response is correct
-  <future> Alternatives: a generator of viable alternatives for the question
+  Instructions: A string showing the instructions to be shown to show how to fill the questions
+  Raw: the text version of the template, to be compiled.
+  Compiled: An EEx version of the template used to generate questions.
+  RAW_Solution: A text version, in  EEX format, of the solution to the query
+  Compiled Solution: An EEx version opf the solution so they can be easily compared.
+  TODO: Alternatives: A way of generating alternatives to the proper answer
   """
 
-  @enforce_keys ~w[name instructions raw solutioner]a
-  defstruct ~w[name instructions raw compiled solutioner]a
+  @enforce_keys ~w[name instructions raw_query raw_solver]a
+  defstruct ~w[name instructions raw_query compiled_query raw_solver compiled_solver]a
 
   def new(fields) do
-    # Let's make the exception to  be of the same type that the rest
-    raw =
+    raw_query =
       try do
-        Keyword.fetch!(fields, :raw)
+        Keyword.fetch!(fields, :raw_query)
       rescue
         _exception -> reraise ArgumentError, __STACKTRACE__
       end
 
-    # Compile the raw template into something actionable
+    raw_solver =
+      try do
+        Keyword.fetch!(fields, :raw_solver)
+      rescue
+        _exception -> reraise ArgumentError, __STACKTRACE__
+      end
+
     struct!(
       __MODULE__,
-      Keyword.put(fields, :compiled, EEx.compile_string(raw))
+      Keyword.merge(fields,
+        compiled_query: EEx.compile_string(raw_query),
+        compiled_solver: EEx.compile_string(raw_solver)
+      )
     )
   end
 end

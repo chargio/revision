@@ -18,7 +18,7 @@ defmodule Test.Boundary.QuizValidatorTest do
     assert QuizValidator.errors(fields) == [
              {:title, "must be present"},
              {:template, "must be present"},
-             {:input_generator, "must be present"}
+             {:inputs, "must be present"}
            ]
   end
 

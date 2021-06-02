@@ -9,9 +9,9 @@ defmodule QuizServer.Boundary.QuizValidator do
     fields = Map.new(fields)
 
     []
-    |> required(fields, ~w[title template input_generator]a)
+    |> required(fields, ~w[title template inputs]a)
     |> validate_with_function(fields, :title, &validate_is_string/1)
-    |> validate_with_function(fields, :input_generator, &validate_is_function(&1, 0))
+    |> validate_with_function(fields, :inputs, &validate_is_list/1)
     |> validate_with_function(fields, :template, &validate_is_template/1)
   end
 

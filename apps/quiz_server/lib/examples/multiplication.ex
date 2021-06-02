@@ -1,25 +1,27 @@
 defmodule QuizServer.Examples.Multiplication do
   @moduledoc """
-  A ready made example that solves all elements in the process.
-  It creates a multiplication table to check
+  A sample Template and Quiz that can be generated using functions to test the logic of the application.
   """
+
   alias QuizServer.Core.{Template, Quiz, Question}
 
   @table_integers 1..10
 
-  def multiplication_solution(subs) do
-    left = Keyword.fetch!(subs, :left)
-    right = Keyword.fetch!(subs, :right)
-    Integer.to_string(left * right)
+  def raw_query() do
+    "<%= @left %> * <%= @right %>"
+  end
+
+  def raw_solver() do
+    "<%= @left * @right %>"
   end
 
   def template_fields(overrides \\ []) do
     Keyword.merge(
       [
-        name: :multiplication,
-        instructions: "Multiplique los dos números",
-        raw: "<%= @left %> * <%= @right %>",
-        solutioner: &multiplication_solution/1
+        name: "Multiplication",
+        instructions: "Multiply both numbers",
+        raw_query: raw_query(),
+        raw_solver: raw_solver()
       ],
       overrides
     )
@@ -29,6 +31,13 @@ defmodule QuizServer.Examples.Multiplication do
     overrides
     |> template_fields()
     |> Template.new()
+  end
+
+  def quiz_fields(overrides \\ []) do
+    Keyword.merge(
+      [title: "Tabla del 7", inputs: table_inputs(7), template: build_template()],
+      overrides
+    )
   end
 
   def question_fields(overrides \\ []) do
@@ -52,30 +61,13 @@ defmodule QuizServer.Examples.Multiplication do
     Question.new(template, parameters)
   end
 
-  def multiplication_input_generator(number_or_list \\ 7)
-
-  def multiplication_input_generator(number) when is_integer(number) do
-    for i <- @table_integers, do: [left: number, right: i]
-  end
-
-  def multiplication_input_generator(list_of_numbers) when is_list(list_of_numbers) do
-    for i <- list_of_numbers, j <- @table_integers, do: [left: i, right: j]
-  end
-
-  def quiz_fields(overrides \\ []) do
-    Keyword.merge(
-      [
-        title: "Tabla del 7",
-        input_generator: &multiplication_input_generator/0,
-        template: build_template()
-      ],
-      overrides
-    )
-  end
-
   def build_quiz(overrides \\ []) do
     overrides
     |> quiz_fields()
     |> Quiz.new()
+  end
+
+  defp table_inputs(number) when is_integer(number) do
+    for i <- @table_integers, do: [left: number, right: i]
   end
 end

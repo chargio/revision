@@ -1,24 +1,26 @@
 defmodule QuizServer.Core.Response do
   @moduledoc """
-  Response provided by a user to a Question
+  An answer to a Question generated from a Template
   """
-  @enforce_keys ~w[id template question]a
-  defstruct ~w[template question id answer correct timestamp]a
 
-  def new(question: question, id: id, answer: answer) do
-    template = question.template
+  @enforce_keys ~w[question response]a
+  defstruct ~w[question response correct? timestamp]a
 
+  alias QuizServer.Core.Question
+
+  def new(question: %Question{} = question, response: response) when is_binary(response) do
     %__MODULE__{
-      id: id,
       question: question,
-      template: template,
-      answer: answer,
-      correct: is_correct?(question, answer),
+      response: response,
+      correct?: is_correct?(question, response),
       timestamp: DateTime.utc_now()
     }
   end
 
-  defp is_correct?(question, answer) do
-    answer == question.solution
+  defp is_correct?(question, response, strategy \\ :exact)
+
+  # The current strategy is :exact, but giving room for other
+  defp is_correct?(question, response, :exact) do
+    response == question.solution
   end
 end

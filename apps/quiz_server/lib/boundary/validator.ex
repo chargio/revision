@@ -63,10 +63,12 @@ defmodule QuizServer.Boundary.Validator do
   def validate_is_string(input) when is_binary(input), do: :ok
   def validate_is_string(_input), do: {:error, "must be a string"}
 
+  def validate_is_list(input) when is_list(input), do: :ok
+  def validate_is_list(_input), do: {:error, "must be a list"}
+
   @doc """
   Validation to make sure that the field is a function
   """
-
   @spec validate_is_function(any, integer()) :: validation_result()
   def validate_is_function(input, arity \\ 1)
 

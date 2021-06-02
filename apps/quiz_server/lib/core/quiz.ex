@@ -1,119 +1,115 @@
 defmodule QuizServer.Core.Quiz do
   @moduledoc """
-  Quiz questions, will be used to follow the user while the answer some questions.
+  A quiz, consisting on a list of Questions to be answered, from a Template, that covers a list of inputs
   """
 
   alias QuizServer.Core.{Question, Response}
 
-  @enforce_keys [:title, :template, :input_generator]
+  @enforce_keys ~w[title template inputs]a
   defstruct title: nil,
             template: nil,
             remaining: [],
             current_question: nil,
             last_response: nil,
+            inputs: [],
             questions: [],
-            input_generator: nil,
             incorrect: [],
             correct: [],
             record: %{good: 0, bad: 0}
 
   @doc """
-  Creates an new Quiz populating the data with the fields
+  Creates a new Quiz populating the data with the fields required
   """
+
   def new(fields) do
     struct!(__MODULE__, fields)
     |> populate_questions()
-    |> pick_current_question()
   end
 
+  @spec next_question(map) :: {:ok, map} | {:finished, map}
   @doc """
-  Selects the new question from the quiz
-  If a current_question exists, then returns the same
+  Select the next question to be answered in the quiz
   """
-  def next_question(%__MODULE__{current_question: nil} = quiz) do
-    quiz
-    |> pick_current_question
+  def next_question(%__MODULE__{current_question: nil, remaining: []} = quiz) do
+    {:finished, quiz}
+  end
+
+  def next_question(%__MODULE__{current_question: nil, remaining: [head | tail]} = quiz) do
+    {:ok, Map.merge(quiz, %{current_question: head, remaining: tail})}
   end
 
   def next_question(quiz) do
-    quiz
+    {:ok, quiz}
   end
 
   @doc """
-  Compares a question with an answer and udpates the quiz appropriately.
-  It sets current_question to nil.
+  Answer the current question with a string or an Answer
   """
-  def answer_current_question(
-        %__MODULE__{current_question: question} = quiz,
-        %Response{correct: true, question: question} = response
-      ) do
+  def answer_question(%__MODULE__{current_question: nil} = quiz, _response),
+    do: {:no_current_question, quiz}
+
+  def answer_question(%__MODULE__{current_question: question} = quiz, response)
+      when is_binary(response) do
+    response = Response.new(question: question, response: response)
+    answer_current_question(quiz, response)
+  end
+
+  def answer_question(%__MODULE__{} = quiz, %Response{} = response) do
+    answer_current_question(quiz, response)
+  end
+
+  @doc """
+  Resets the quiz to its original form.
+  """
+  def reset_quiz(%__MODULE__{
+        questions: questions,
+        title: title,
+        inputs: inputs,
+        template: template
+      }) do
+    struct!(__MODULE__,
+      questions: questions,
+      remaining: questions,
+      title: title,
+      inputs: inputs,
+      template: template
+    )
+  end
+
+  # Populates the questions with the input generator and the template.
+  defp populate_questions(%__MODULE__{template: template, inputs: inputs} = quiz) do
+    questions =
+      inputs
+      |> Enum.map(&Question.new(template, &1))
+
+    quiz
+    |> Map.merge(%{questions: questions, remaining: questions})
+  end
+
+  # Provides an answer to the current question, save it as the last response, and increases the counts
+  # of good and bad answers, then reset current question.
+
+  defp answer_current_question(%__MODULE__{current_question: nil} = quiz, _response),
+    do: {:no_current_question, quiz}
+
+  defp answer_current_question(
+         %__MODULE__{current_question: question} = quiz,
+         %Response{correct?: true, question: question} = response
+       ) do
     quiz
     |> save_response(response)
     |> inc_record(:correct)
     |> clean_current_question()
   end
 
-  def answer_current_question(
-        %__MODULE__{current_question: question} = quiz,
-        %Response{correct: false, question: question} = response
-      ) do
+  defp answer_current_question(
+         %__MODULE__{current_question: question} = quiz,
+         %Response{correct?: false, question: question} = response
+       ) do
     quiz
     |> save_response(response)
     |> inc_record(:incorrect)
     |> clean_current_question()
-  end
-
-  def answer_current_question(quiz, _response) do
-    quiz |> Map.put(:last_response, {:error, "only current question can be answered"})
-  end
-
-  @doc """
-  Resets the quiz to its original form.
-  """
-  def reset_quiz(
-        %__MODULE__{
-          questions: questions,
-          title: title,
-          input_generator: input_generator,
-          template: template
-        } = _quiz
-      ) do
-    struct!(__MODULE__,
-      questions: questions,
-      remaining: questions,
-      title: title,
-      input_generator: input_generator,
-      template: template
-    )
-    |> pick_current_question()
-  end
-
-  # Populates the questions with the input generator and the template.
-  defp populate_questions(%{template: template} = quiz) do
-    questions =
-      generate_inputs(quiz)
-      |> Enum.shuffle()
-      |> Enum.map(&Question.new(template, &1))
-
-    Map.put(quiz, :questions, questions)
-    |> Map.put(:remaining, questions)
-  end
-
-  # Calls the input generator to calculate the inputs
-  defp generate_inputs(quiz) when is_function(quiz.input_generator) do
-    quiz.input_generator.()
-  end
-
-  # If there are remaining questions, pick one,
-  # put it in current_question, and modify remaining.
-  # If not, just return :empty
-  defp pick_current_question(%{remaining: [head | tail]} = quiz) do
-    Map.put(quiz, :current_question, head)
-    |> Map.put(:remaining, tail)
-  end
-
-  defp pick_current_question(_) do
-    :empty
   end
 
   defp inc_record(quiz, :correct) do
@@ -126,13 +122,13 @@ defmodule QuizServer.Core.Quiz do
     Map.put(quiz, :record, new_record)
   end
 
-  defp save_response(quiz, %Response{correct: false} = response) do
+  defp save_response(quiz, %Response{correct?: false} = response) do
     quiz
     |> Map.put(:last_response, response)
     |> Map.put(:incorrect, [response | quiz.incorrect])
   end
 
-  defp save_response(quiz, %Response{correct: true} = response) do
+  defp save_response(quiz, %Response{correct?: true} = response) do
     quiz
     |> Map.put(:last_response, response)
     |> Map.put(:correct, [response | quiz.correct])

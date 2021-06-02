@@ -18,8 +18,8 @@ defmodule Test.Boundary.TemplateValidatorTest do
     assert TemplateValidator.errors(fields) == [
              {:name, "must be present"},
              {:instructions, "must be present"},
-             {:raw, "must be present"},
-             {:solutioner, "must be present"}
+             {:raw_query, "must be present"},
+             {:raw_solver, "must be present"}
            ]
   end
 
