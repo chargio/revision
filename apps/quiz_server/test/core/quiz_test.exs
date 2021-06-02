@@ -167,7 +167,7 @@ defmodule QuizServer.QuizTest do
 
       # Thers is no current_question, and nothing remaining
       assert q3.current_question == nil
-      assert length(q3.remaining) == 0
+      assert q3.remaining == []
       assert {:no_current_question, q4} = Quiz.answer_question(q3, "very bad")
 
       # Next question returns that is finished
