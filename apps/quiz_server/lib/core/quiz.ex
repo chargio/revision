@@ -5,9 +5,8 @@ defmodule QuizServer.Core.Quiz do
 
   alias QuizServer.Core.{Question, Response}
 
-  @enforce_keys ~w[title template inputs]a
-  defstruct title: nil,
-            template: nil,
+  @enforce_keys ~w[template inputs]a
+  defstruct template: nil,
             remaining: [],
             current_question: nil,
             last_response: nil,
@@ -25,6 +24,14 @@ defmodule QuizServer.Core.Quiz do
     struct!(__MODULE__, fields)
     |> populate_questions()
   end
+
+
+  @spec build_quiz(list) :: {:ok, %QuizServer.Core.Quiz{}} | {:error, list}
+  def build_quiz(fields) do
+    quiz = new(fields)
+    if quiz, do: {:ok, quiz}, else: {:error, fields}
+  end
+
 
   @spec next_question(map) :: {:ok, map} | {:finished, map}
   @doc """
@@ -45,9 +52,17 @@ defmodule QuizServer.Core.Quiz do
   @doc """
   Answer the current question with a string or an Answer
   """
-  def answer_question(%__MODULE__{current_question: nil} = quiz, _response),
-    do: {:no_current_question, quiz}
+  # When there is no current question, and remaining is empty, it is finished
+  def answer_question(%__MODULE__{current_question: nil, remaining: []} = quiz, _response) do
+    {:finished, quiz}
+  end
 
+  # When there is no current question, you can't answer
+  def answer_question(%__MODULE__{current_question: nil} = quiz, _response) do
+    {:no_current_question, quiz}
+  end
+
+  # When the response is a String
   def answer_question(%__MODULE__{current_question: question} = quiz, response)
       when is_binary(response) do
     response = Response.new(question: question, response: response)
@@ -63,14 +78,12 @@ defmodule QuizServer.Core.Quiz do
   """
   def reset_quiz(%__MODULE__{
         questions: questions,
-        title: title,
         inputs: inputs,
         template: template
       }) do
     struct!(__MODULE__,
       questions: questions,
       remaining: questions,
-      title: title,
       inputs: inputs,
       template: template
     )

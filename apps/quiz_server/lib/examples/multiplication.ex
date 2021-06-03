@@ -35,7 +35,7 @@ defmodule QuizServer.Examples.Multiplication do
 
   def quiz_fields(overrides \\ []) do
     Keyword.merge(
-      [title: "Tabla del 7", inputs: table_inputs(7), template: build_template()],
+      [inputs: table_inputs(7), template: build_template()],
       overrides
     )
   end

@@ -3,17 +3,21 @@ defmodule QuizServer do
   Documentation for `QuizServer`.
   """
 
-  alias QuizServer.Boundary.{QuizSession, QuizManager, TemplateManager}
+  alias QuizServer.Boundary.{QuizSession, TemplateManager}
   alias QuizServer.Boundary.{TemplateValidator, QuizValidator}
   alias QuizServer.Core.Quiz
 
-  def take_quiz(title, uid) do
-    with %Quiz{} = quiz <- QuizManager.lookup_quiz_by_title(title),
-         {:ok, _} <- QuizSession.take_quiz(quiz, uid) do
-      {title, uid}
-    else
-      error -> error
-    end
+
+  def list_templates() do
+    TemplateManager.all()
+  end
+
+  def take_quiz(template_name, inputs, uid) do
+    with {:ok, template} <- TemplateManager.lookup_template_by_name(template_name),
+         {:ok, quiz} <- build_quiz(template: template, inputs: inputs)
+         do
+          QuizSession.take_quiz(quiz, uid)
+         end
   end
 
   def next_question(session) do
@@ -25,9 +29,9 @@ defmodule QuizServer do
   end
 
   @doc """
-  Builds a template, after validating it properly
+  Builds a template and puts it in the TemplateManager for later access, after validating it properly
   """
-  def build_template(fields) do
+  def build_template(fields) when is_list(fields) do
     with false <- TemplateValidator.has_errors?(fields),
          :ok <- TemplateManager.build_template(TemplateManager, fields) do
       :ok
@@ -37,15 +41,17 @@ defmodule QuizServer do
     end
   end
 
-  @doc """
-  Builds a quiz, using a predefined template
-  """
-  def build_quiz(fields) do
+  #Builds a quiz, using a predefined template and inputs
+  defp build_quiz(fields) when is_list(fields) do
     with false <- QuizValidator.has_errors?(fields),
-         :ok <- QuizManager.build_quiz(QuizManager, fields) do
-      :ok
+         {:ok, quiz }  <- Quiz.build_quiz(fields) do
+      {:ok, quiz}
     else
-      error -> error
+      error -> {:error, error}
     end
+  end
+
+  defp build_quiz(%Quiz{} = quiz) do
+    {:ok, quiz}
   end
 end

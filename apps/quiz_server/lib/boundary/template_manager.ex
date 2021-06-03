@@ -25,6 +25,10 @@ defmodule QuizServer.Boundary.TemplateManager do
     GenServer.call(manager, {:lookup_template_by_name, template_name})
   end
 
+  def all(manager \\ __MODULE__) do
+    GenServer.call(manager, {:all_templates})
+  end
+
   def handle_call({:build_template, template_fields}, _from, templates) do
     template = Template.new(template_fields)
     new_templates = Map.put(templates, template.name, template)
@@ -32,6 +36,15 @@ defmodule QuizServer.Boundary.TemplateManager do
   end
 
   def handle_call({:lookup_template_by_name, template_name}, _from, templates) do
-    {:reply, templates[template_name], templates}
+    if templates[template_name] do
+       {:reply, {:ok, templates[template_name]}, templates}
+    else
+      {:reply, {:error, :template_not_found}, templates}
+    end
+  end
+
+  def handle_call({:all_templates}, _from, templates) do
+    template_list = templates |> Enum.map(fn {k, _v} -> k end)
+    {:reply, template_list, templates}
   end
 end

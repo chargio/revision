@@ -16,7 +16,6 @@ defmodule Test.Boundary.QuizValidatorTest do
     fields = []
 
     assert QuizValidator.errors(fields) == [
-             {:title, "must be present"},
              {:template, "must be present"},
              {:inputs, "must be present"}
            ]

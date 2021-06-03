@@ -28,12 +28,6 @@ defmodule QuizServer.QuizTest do
       assert %Quiz{} = Quiz.new(quiz_fields)
     end
 
-    test "creation fails when title is missing", %{quiz_fields: quiz_fields} do
-      fields = Keyword.delete(quiz_fields, :title)
-
-      assert_raise ArgumentError, fn -> Quiz.new(fields) end
-    end
-
     test "creation fails when template is missing", %{quiz_fields: quiz_fields} do
       fields = Keyword.delete(quiz_fields, :template)
 
@@ -73,7 +67,6 @@ defmodule QuizServer.QuizTest do
       assert is_nil(quiz.current_question)
 
       assert new_quiz.template == quiz.template
-      assert new_quiz.title == quiz.title
       assert new_quiz.questions == new_quiz.questions
       assert new_quiz.inputs == quiz.inputs
       assert new_quiz.incorrect == []
@@ -165,10 +158,10 @@ defmodule QuizServer.QuizTest do
       # We answer the next question, and last, so there is no question remaining.
       q3 = Quiz.answer_question(q2, "also bad")
 
-      # Thers is no current_question, and nothing remaining
+      # There is no current_question, and nothing remaining, so we get finished trying to answer
       assert q3.current_question == nil
       assert q3.remaining == []
-      assert {:no_current_question, q4} = Quiz.answer_question(q3, "very bad")
+      assert {:finished, q4} = Quiz.answer_question(q3, "very bad")
 
       # Next question returns that is finished
       assert q4.current_question == nil
