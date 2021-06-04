@@ -7,7 +7,7 @@ defmodule QuizServer.Core.Question do
   @enforce_keys ~w[template parameters]a
   defstruct ~w[asked template parameters solution]a
 
-  def new(%Template{} = template, parameters \\ []) do
+  def new(%Template{} = template, parameters ) do
     %__MODULE__{
       asked: build_question(template, parameters),
       template: template,

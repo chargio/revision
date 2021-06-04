@@ -16,50 +16,44 @@ defmodule QuizServer.Core.Quiz do
             correct: [],
             record: %{good: 0, bad: 0}
 
+  @spec new(list) :: %__MODULE__{       }
   @doc """
   Creates a new Quiz populating the data with the fields required
   """
-
-  def new(fields) do
+  def new(fields) when is_list(fields) do
     struct!(__MODULE__, fields)
     |> populate_questions()
   end
 
-
-  @spec build_quiz(list) :: {:ok, %QuizServer.Core.Quiz{}} | {:error, list}
-  def build_quiz(fields) do
-    quiz = new(fields)
-    if quiz, do: {:ok, quiz}, else: {:error, fields}
-  end
-
-
-  @spec next_question(map) :: {:ok, map} | {:finished, map}
+  @spec next_question(map) :: :no_more_questions | %__MODULE__{}
   @doc """
   Select the next question to be answered in the quiz
   """
-  def next_question(%__MODULE__{current_question: nil, remaining: []} = quiz) do
-    {:finished, quiz}
+  def next_question(%__MODULE__{current_question: nil, remaining: []} = _quiz) do
+    :no_more_questions
   end
 
   def next_question(%__MODULE__{current_question: nil, remaining: [head | tail]} = quiz) do
-    {:ok, Map.merge(quiz, %{current_question: head, remaining: tail})}
+    Map.merge(quiz, %{current_question: head, remaining: tail})
   end
 
   def next_question(quiz) do
-    {:ok, quiz}
+    quiz
   end
 
+
+@spec answer_question(%__MODULE__{}, binary() | %QuizServer.Core.Response{}) :: :finished | :no_current_question | %__MODULE__{}
   @doc """
   Answer the current question with a string or an Answer
   """
   # When there is no current question, and remaining is empty, it is finished
-  def answer_question(%__MODULE__{current_question: nil, remaining: []} = quiz, _response) do
-    {:finished, quiz}
+  def answer_question(%__MODULE__{current_question: nil, remaining: []} = _quiz, _response) do
+    :finished
   end
 
   # When there is no current question, you can't answer
-  def answer_question(%__MODULE__{current_question: nil} = quiz, _response) do
-    {:no_current_question, quiz}
+  def answer_question(%__MODULE__{current_question: nil} = _quiz, _response) do
+    :no_current_question
   end
 
   # When the response is a String
@@ -102,8 +96,8 @@ defmodule QuizServer.Core.Quiz do
   # Provides an answer to the current question, save it as the last response, and increases the counts
   # of good and bad answers, then reset current question.
 
-  defp answer_current_question(%__MODULE__{current_question: nil} = quiz, _response),
-    do: {:no_current_question, quiz}
+  defp answer_current_question(%__MODULE__{current_question: nil} = _quiz, _response),
+    do: :no_current_question
 
   defp answer_current_question(
          %__MODULE__{current_question: question} = quiz,

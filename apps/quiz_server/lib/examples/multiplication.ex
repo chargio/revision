@@ -50,10 +50,8 @@ defmodule QuizServer.Examples.Multiplication do
     )
   end
 
-  def build_question(overrides \\ []) do
-    fields =
-      overrides
-      |> question_fields()
+  def build_question() do
+    fields = question_fields()
 
     template = Keyword.get(fields, :template, nil)
     parameters = Keyword.get(fields, :parameters, nil)

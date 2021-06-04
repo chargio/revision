@@ -8,7 +8,7 @@ defmodule QuizServer.ResponseTest do
 
   defp new_quiz_and_question(context) do
     template = Multiplication.build_template()
-    question = Multiplication.build_question(template: template)
+    question = Multiplication.build_question()
 
     new_context = Map.merge(context, %{template: template, question: question})
     {:ok, new_context}

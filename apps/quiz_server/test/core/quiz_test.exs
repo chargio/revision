@@ -10,14 +10,13 @@ defmodule QuizServer.QuizTest do
     {:ok, Map.put(context, :quiz_fields, Multiplication.quiz_fields())}
   end
 
-  def quiz_with_question_selected_create(context) do
-    {:ok, quiz} = Multiplication.build_quiz() |> Quiz.next_question()
+  def create_quiz_with_question_selected(context) do
+    quiz = Multiplication.build_quiz() |> Quiz.next_question()
     {:ok, Map.put(context, :quiz, quiz)}
   end
 
-  def quiz_with_two_questions_one_selected(context) do
-    quiz = Multiplication.build_quiz(inputs: [[left: 7, right: 8], [left: 7, right: 7]])
-    {:ok, quiz} = Quiz.next_question(quiz)
+  def create_quiz_with_two_questions_one_selected(context) do
+    quiz = Multiplication.build_quiz(inputs: [[left: 7, right: 8], [left: 7, right: 7]]) |> Quiz.next_question()
     {:ok, Map.put(context, :quiz, quiz)}
   end
 
@@ -49,7 +48,7 @@ defmodule QuizServer.QuizTest do
     test "you can't answer if there is no current question", %{quiz_fields: quiz_fields} do
       quiz = Quiz.new(quiz_fields)
 
-      assert {:no_current_question, ^quiz} = Quiz.answer_question(quiz, "very bad")
+      assert :no_current_question == Quiz.answer_question(quiz, "very bad")
     end
 
     test "a newly created quiz has no current answer", %{quiz_fields: quiz_fields} do
@@ -76,10 +75,10 @@ defmodule QuizServer.QuizTest do
   end
 
   describe "answering questions" do
-    setup [:quiz_with_question_selected_create]
+    setup [:create_quiz_with_question_selected]
 
     test "asking for next question returns the same question until it is answered", %{quiz: quiz} do
-      {:ok, next} = Quiz.next_question(quiz)
+      next = Quiz.next_question(quiz)
 
       assert next.current_question == quiz.current_question
     end
@@ -108,7 +107,7 @@ defmodule QuizServer.QuizTest do
     end
 
     test "answering correctly and incorrectly increases record values", %{quiz: quiz} do
-      {:ok, quiz} = Quiz.reset_quiz(quiz) |> Quiz.next_question()
+      quiz = Quiz.reset_quiz(quiz) |> Quiz.next_question()
 
       assert quiz.record[:good] == 0
       assert quiz.record[:bad] == 0
@@ -125,7 +124,7 @@ defmodule QuizServer.QuizTest do
 
       assert length(answered1.remaining) == length(answered1.questions) - 1
 
-      {:ok, new_question} = Quiz.next_question(answered1)
+      new_question = Quiz.next_question(answered1)
 
       response2 = Response.new(question: new_question.current_question, response: "bad response")
 
@@ -143,13 +142,13 @@ defmodule QuizServer.QuizTest do
   end
 
   describe "end of quiz" do
-    setup [:quiz_with_two_questions_one_selected]
+    setup [:create_quiz_with_two_questions_one_selected]
 
     test "when running out of questions, you get :finished as the result", %{quiz: quiz} do
       # We create the quiz with two questions, one remaining and one in current question.
       assert length(quiz.remaining) + 1 == 2
       # We answer the question (badly) and advance to the next question
-      {:ok, q2} = Quiz.answer_question(quiz, "bad") |> Quiz.next_question()
+       q2 = Quiz.answer_question(quiz, "bad") |> Quiz.next_question()
 
       # There is only one in current_question
       refute is_nil(q2.current_question)
@@ -161,11 +160,10 @@ defmodule QuizServer.QuizTest do
       # There is no current_question, and nothing remaining, so we get finished trying to answer
       assert q3.current_question == nil
       assert q3.remaining == []
-      assert {:finished, q4} = Quiz.answer_question(q3, "very bad")
+      assert :finished == Quiz.answer_question(q3, "very bad")
 
       # Next question returns that is finished
-      assert q4.current_question == nil
-      assert {:finished, _q5} = Quiz.next_question(q4)
+      assert :no_more_questions == Quiz.next_question(q3)
     end
   end
 end

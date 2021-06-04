@@ -3,7 +3,7 @@ defmodule QuizServer do
   Documentation for `QuizServer`.
   """
 
-  alias QuizServer.Boundary.{QuizSession, TemplateManager}
+  alias QuizServer.Boundary.{QuizSession, TemplateManager, QuizManager}
   alias QuizServer.Boundary.{TemplateValidator, QuizValidator}
   alias QuizServer.Core.Quiz
 
@@ -44,7 +44,7 @@ defmodule QuizServer do
   #Builds a quiz, using a predefined template and inputs
   defp build_quiz(fields) when is_list(fields) do
     with false <- QuizValidator.has_errors?(fields),
-         {:ok, quiz }  <- Quiz.build_quiz(fields) do
+         {:ok, quiz }  <- QuizManager.build_quiz(fields) do
       {:ok, quiz}
     else
       error -> {:error, error}
