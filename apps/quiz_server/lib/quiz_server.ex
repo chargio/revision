@@ -31,7 +31,7 @@ defmodule QuizServer do
   """
   def build_template(fields) when is_list(fields) do
     with false <- TemplateValidator.has_errors?(fields),
-         :ok <- TemplateManager.build_template(TemplateManager, fields) do
+         :ok <- TemplateManager.add_template(TemplateManager, fields) do
       :ok
     else
       {true, errors} -> errors

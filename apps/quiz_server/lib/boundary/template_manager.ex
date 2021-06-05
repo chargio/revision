@@ -30,11 +30,9 @@ defmodule QuizServer.Boundary.TemplateManager do
     GenServer.call(manager, {:all_templates})
   end
 
-
   def remove_template(manager \\ __MODULE__, template_fields) do
     GenServer.call(manager, {:remove_template, template_fields})
   end
-
 
   def handle_call({:add_template, %Template{} = template}, _from, templates) do
     new_templates = Map.put(templates, template.name, template)

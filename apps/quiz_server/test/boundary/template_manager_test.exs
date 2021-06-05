@@ -1,4 +1,6 @@
 defmodule QuizServer.Boundary.TemplateManagerTest do
+  @moduledoc false
+
   use ExUnit.Case
   alias QuizServer.Boundary.TemplateManager
   alias QuizServer.Core.Template
@@ -34,7 +36,9 @@ defmodule QuizServer.Boundary.TemplateManagerTest do
     assert :ok == TemplateManager.add_template(fields_unlikely)
     assert {:ok, _} = TemplateManager.lookup_template_by_name(fields_unlikely[:name])
     assert :ok == TemplateManager.remove_template(fields_unlikely[:name])
-    assert {:error, :template_not_found} = TemplateManager.lookup_template_by_name(fields_unlikely[:name])
+
+    assert {:error, :template_not_found} =
+             TemplateManager.lookup_template_by_name(fields_unlikely[:name])
   end
 
   describe "parallel with unique TemplateManager" do
@@ -76,34 +80,45 @@ defmodule QuizServer.Boundary.TemplateManagerTest do
       assert :ok == TemplateManager.add_template(tm, template)
     end
 
-    test "adding a template with a name and updated fields updates the template", %{template_manager: tm, template_fields: tf} do
+    test "adding a template with a name and updated fields updates the template", %{
+      template_manager: tm,
+      template_fields: tf
+    } do
       ins1 = Keyword.get(tf, :instructions)
       name = Keyword.get(tf, :name)
 
       assert :ok == TemplateManager.add_template(tm, tf)
-      assert {:ok, %Template{instructions: ^ins1}} = TemplateManager.lookup_template_by_name(tm, name)
+
+      assert {:ok, %Template{instructions: ^ins1}} =
+               TemplateManager.lookup_template_by_name(tm, name)
 
       tf2 = updated_template_fields()
       ins2 = Keyword.get(tf2, :instructions)
 
       assert ins1 != ins2
       assert :ok == TemplateManager.add_template(tm, tf2)
-      assert {:ok, %Template{instructions: ^ins2}} = TemplateManager.lookup_template_by_name(tm, name)
+
+      assert {:ok, %Template{instructions: ^ins2}} =
+               TemplateManager.lookup_template_by_name(tm, name)
     end
 
-    test "you can delete a Template directly", %{template_manager: tm, template_fields: tf}do
+    test "you can delete a Template directly", %{template_manager: tm, template_fields: tf} do
       template = Template.new(tf)
       assert :ok == TemplateManager.add_template(tm, template)
       assert {:ok, _} = TemplateManager.lookup_template_by_name(tm, tf[:name])
       assert :ok == TemplateManager.remove_template(tm, template)
-      assert {:error, :template_not_found} = TemplateManager.lookup_template_by_name(tm, tf[:name])
+
+      assert {:error, :template_not_found} =
+               TemplateManager.lookup_template_by_name(tm, tf[:name])
     end
 
     test "you can delete a Template by name", %{template_manager: tm, template_fields: tf} do
       assert :ok == TemplateManager.add_template(tm, tf)
       assert {:ok, _} = TemplateManager.lookup_template_by_name(tm, tf[:name])
       assert :ok == TemplateManager.remove_template(tm, tf[:name])
-      assert {:error, :template_not_found} = TemplateManager.lookup_template_by_name(tm, tf[:name])
+
+      assert {:error, :template_not_found} =
+               TemplateManager.lookup_template_by_name(tm, tf[:name])
     end
   end
 end

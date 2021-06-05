@@ -93,6 +93,7 @@ defmodule QuizServer.Core.Quiz do
     |> Map.merge(%{questions: questions, remaining: questions})
   end
 
+
   # Provides an answer to the current question, save it as the last response, and increases the counts
   # of good and bad answers, then reset current question.
 
