@@ -1,7 +1,6 @@
 defimpl Inspect, for: QuizServer.Core.Question do
   alias QuizServer.Core.Question
 
-
   @doc ~S"""
 
   ###  Examples
@@ -12,8 +11,6 @@ defimpl Inspect, for: QuizServer.Core.Question do
   def inspect(%Question{template: nil}, _opts) do
     "#Question[empty]"
   end
-
-
 
   def inspect(%Question{} = question, _opts) do
     """

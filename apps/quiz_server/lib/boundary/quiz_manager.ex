@@ -16,7 +16,7 @@ defmodule QuizServer.Boundary.QuizManager do
     end
   end
 
-  def answer_question(%Quiz{} = quiz, response)  do
+  def answer_question(%Quiz{} = quiz, response) do
     case Quiz.answer_question(quiz, response) do
       :finished -> {:finished, quiz}
       :no_current_question -> {:no_current_question, quiz}

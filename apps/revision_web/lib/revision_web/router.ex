@@ -17,7 +17,11 @@ defmodule RevisionWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
+    get "/session/new/multiplication/:number", SessionController, :new
+    get "/session/:quiz_title/:uid", SessionController, :show
+    put "/session/:quiz_title/:uid/:response", SessionController, :update
   end
+
 
   # Other scopes may use custom stacks.
   # scope "/api", RevisionWeb do

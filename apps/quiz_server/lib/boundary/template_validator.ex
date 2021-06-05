@@ -12,7 +12,11 @@ defmodule QuizServer.Boundary.TemplateValidator do
 
     []
     |> required(fields, ~w[name instructions raw_query raw_solver]a)
-    |> validate_with_function(fields, ~w[name instructions raw_query raw_solver]a, &validate_is_string/1)
+    |> validate_with_function(
+      fields,
+      ~w[name instructions raw_query raw_solver]a,
+      &validate_is_string/1
+    )
   end
 
   def errors(_fields), do: [{nil, "A map of fields is required"}]

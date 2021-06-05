@@ -16,7 +16,10 @@ defmodule QuizServer.QuizTest do
   end
 
   def create_quiz_with_two_questions_one_selected(context) do
-    quiz = Multiplication.build_quiz(inputs: [[left: 7, right: 8], [left: 7, right: 7]]) |> Quiz.next_question()
+    quiz =
+      Multiplication.build_quiz(inputs: [[left: 7, right: 8], [left: 7, right: 7]])
+      |> Quiz.next_question()
+
     {:ok, Map.put(context, :quiz, quiz)}
   end
 
@@ -148,7 +151,7 @@ defmodule QuizServer.QuizTest do
       # We create the quiz with two questions, one remaining and one in current question.
       assert length(quiz.remaining) + 1 == 2
       # We answer the question (badly) and advance to the next question
-       q2 = Quiz.answer_question(quiz, "bad") |> Quiz.next_question()
+      q2 = Quiz.answer_question(quiz, "bad") |> Quiz.next_question()
 
       # There is only one in current_question
       refute is_nil(q2.current_question)

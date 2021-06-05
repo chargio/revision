@@ -3,7 +3,7 @@ defmodule QuizServer.Boundary.QuizSession do
   Creates an easy interface to call the Session as a service
   """
   alias QuizServer.Core.{Template, Quiz, Response}
-  alias QuizServer.Boundary.TemplateManager
+  alias QuizServer.Boundary.{TemplateManager, QuizManager}
 
   use GenServer
 
@@ -14,12 +14,12 @@ defmodule QuizServer.Boundary.QuizSession do
 
   def child_spec({%Quiz{} = quiz, uid}) do
     template = quiz.template
+
     %{
       id: {__MODULE__, via({template.name, uid})},
       start: {__MODULE__, :start_link, [{quiz, uid}]},
       restart: :temporary
     }
-
   end
 
   def start_link({quiz, uid}) do
@@ -34,15 +34,13 @@ defmodule QuizServer.Boundary.QuizSession do
 
   def take_quiz(template_name, inputs, uid) when is_list(inputs) do
     with {:ok, template} <- TemplateManager.lookup_template_by_name(template_name),
-         {:ok, quiz} <- Quiz.build_quiz(template: template, inputs: inputs) do
-
-          take_quiz(quiz, uid)
-
+         {:ok, quiz} <- QuizManager.build_quiz(template: template, inputs: inputs) do
+      take_quiz(quiz, uid)
     else
       nil -> {:error, :template_not_found}
     end
-
   end
+
   def take_quiz(%Quiz{} = quiz, uid) do
     template = quiz.template
 
@@ -50,6 +48,7 @@ defmodule QuizServer.Boundary.QuizSession do
       QuizServer.Supervisor.QuizSession,
       {__MODULE__, {quiz, uid}}
     )
+
     {template.name, uid}
   end
 
@@ -81,17 +80,20 @@ defmodule QuizServer.Boundary.QuizSession do
       {:ok, new_quiz} -> {:reply, new_quiz.current_question, {new_quiz, user_id}}
       {:finished, quiz} -> {:reply, :finished, {quiz, user_id}}
     end
-
   end
 
   @impl true
   def handle_call({:answer_question, response}, _from, {quiz, user_id}) do
-    new_quiz = Quiz.answer_question(quiz.current_question, Response.new(question: quiz.current_question, response: response))
+    new_quiz =
+      Quiz.answer_question(
+        quiz.current_question,
+        Response.new(question: quiz.current_question, response: response)
+      )
+
     maybe_finish(new_quiz, user_id)
   end
 
   defp maybe_finish(%{remaining: []} = _quiz, _id), do: {:stop, :normal, :finished, nil}
-
 
   defp maybe_finish(quiz, user_id) do
     {:reply, {quiz.last_response.response, quiz.last_response.correct?}, {quiz, user_id}}

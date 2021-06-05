@@ -1,0 +1,6 @@
+<h1>Hola</h1>
+
+
+Presiona el botton para empezar con la tabla del <%= @number %>
+
+<%= link "Comenzar test", to: "/session/Tabla del #{@number}/#{random_session_id}", class: "button" %>

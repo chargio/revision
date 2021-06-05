@@ -7,17 +7,15 @@ defmodule QuizServer do
   alias QuizServer.Boundary.{TemplateValidator, QuizValidator}
   alias QuizServer.Core.Quiz
 
-
   def list_templates() do
     TemplateManager.all()
   end
 
   def take_quiz(template_name, inputs, uid) do
     with {:ok, template} <- TemplateManager.lookup_template_by_name(template_name),
-         {:ok, quiz} <- build_quiz(template: template, inputs: inputs)
-         do
-          QuizSession.take_quiz(quiz, uid)
-         end
+         {:ok, quiz} <- build_quiz(template: template, inputs: inputs) do
+      QuizSession.take_quiz(quiz, uid)
+    end
   end
 
   def next_question(session) do
@@ -41,10 +39,10 @@ defmodule QuizServer do
     end
   end
 
-  #Builds a quiz, using a predefined template and inputs
+  # Builds a quiz, using a predefined template and inputs
   defp build_quiz(fields) when is_list(fields) do
     with false <- QuizValidator.has_errors?(fields),
-         {:ok, quiz }  <- QuizManager.build_quiz(fields) do
+         {:ok, quiz} <- QuizManager.build_quiz(fields) do
       {:ok, quiz}
     else
       error -> {:error, error}

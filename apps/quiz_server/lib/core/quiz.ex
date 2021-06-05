@@ -16,7 +16,7 @@ defmodule QuizServer.Core.Quiz do
             correct: [],
             record: %{good: 0, bad: 0}
 
-  @spec new(list) :: %__MODULE__{       }
+  @spec new(list) :: %__MODULE__{}
   @doc """
   Creates a new Quiz populating the data with the fields required
   """
@@ -41,8 +41,8 @@ defmodule QuizServer.Core.Quiz do
     quiz
   end
 
-
-@spec answer_question(%__MODULE__{}, binary() | %QuizServer.Core.Response{}) :: :finished | :no_current_question | %__MODULE__{}
+  @spec answer_question(%__MODULE__{}, binary() | %QuizServer.Core.Response{}) ::
+          :finished | :no_current_question | %__MODULE__{}
   @doc """
   Answer the current question with a string or an Answer
   """
