@@ -18,8 +18,9 @@ defmodule RevisionWeb.Router do
 
     get "/", PageController, :index
     get "/session/new/multiplication/:number", SessionController, :new
-    get "/session/:quiz_title/:uid", SessionController, :show
-    put "/session/:quiz_title/:uid/:response", SessionController, :update
+    post "/session/:template/:number/:uid", SessionController, :create
+    get "/session/:template/:uid", SessionController, :show
+    post "/session/:template/:uid/", SessionController, :update
   end
 
 

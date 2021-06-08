@@ -9,3 +9,9 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+
+alias QuizServer.Examples.Multiplication
+alias QuizServer.Boundary.TemplateManager
+
+
+TemplateManager.add_template(Multiplication.build_template())

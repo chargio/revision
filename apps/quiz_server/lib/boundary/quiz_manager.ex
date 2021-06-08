@@ -33,7 +33,7 @@ defmodule QuizServer.Boundary.QuizManager do
     case Quiz.answer_question(quiz, response) do
       :finished -> {:finished, quiz}
       :no_current_question -> {:no_current_question, quiz}
-      quiz -> {:ok, quiz}
+      new_quiz -> {:ok, new_quiz}
     end
   end
 

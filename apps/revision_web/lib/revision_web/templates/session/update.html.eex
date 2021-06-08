@@ -1,0 +1,20 @@
+<h1> <%= @uid %>: <%= @template %> </h1>
+
+
+<p> La pregunta era:
+<strong><%= @asked %> </strong></p>
+<p>Dijiste:
+<strong><%= @response %> </p></strong>
+
+
+
+
+<p>Y la solucion es:
+<strong><%= @solution %> <p></strong>
+Es
+<%= if @correct?, do: "correcta", else: "incorrecta" %>
+</p>
+
+<p>
+<%=  link "Siguiente", to: "/session/#{@template}/#{@uid}", class: "button" %>
+</p>

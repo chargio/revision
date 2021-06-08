@@ -1,3 +1,9 @@
 Responda:
 
-<%= @uid %>
+<p>
+<strong><%= @asked %> = </strong>
+</p>
+<%= form_for @conn, "/session/#{@template}/#{@uid}/", fn f -> %>
+<%= text_input f, :answer, autocomplete: "off" %>
+<%= submit "Resolver" %>
+<% end %>

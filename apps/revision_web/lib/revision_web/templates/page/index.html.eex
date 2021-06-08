@@ -4,8 +4,9 @@
 </section>
 
 <section class="row">
+  <dl>
    <%= for x <- 10..1//-1 do %>
-     <%= link "Tabla del #{x}", to: "/session/new/multiplication/#{x}",  class: "button" , data: [number: x]  %>
+     <li><%= link "Tabla del #{x}", to: "/session/new/multiplication/#{x}",  class: "button" , data: [number: x]  %></li>
    <% end %>
-
+</ul>
 </section>

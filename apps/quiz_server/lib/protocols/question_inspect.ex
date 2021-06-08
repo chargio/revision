@@ -16,6 +16,7 @@ defimpl Inspect, for: QuizServer.Core.Question do
     """
     #Question{\
     asked: \"#{question.asked}\", \
+    template: \"#{question.template.name}\", \
     parameters: #{inspect(question.parameters)}, \
     solution: \"#{question.solution}\"\
     }\
