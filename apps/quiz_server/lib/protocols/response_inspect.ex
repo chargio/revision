@@ -1,5 +1,5 @@
 defimpl Inspect, for: QuizServer.Core.Response do
-  alias QuizServer.Core.{Response, Question}
+  alias QuizServer.Core.Response
 
 
   def inspect(%Response{question: nil}, _opts) do
