@@ -23,7 +23,6 @@ defmodule RevisionWeb.SessionController do
   end
 
   def show(conn, %{"template" => template_name, "uid" => uid}) do
-    question =
     case QuizSession.next_question({template_name, uid}) do
       {:ok, question}  ->     render(conn, "show.html", template: template_name, uid: uid, asked: question.asked)
 
