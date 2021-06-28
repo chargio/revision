@@ -10,7 +10,13 @@ defmodule Revision.Umbrella.MixProject do
       version: "0.2.0",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      aliases: aliases()
+      aliases: aliases(),
+      releases: [
+        container: [
+          version: "0.0.1",
+          applications: [quiz_server: :permanent, revision: :permanent, revision_web: :permanent]
+        ]
+      ]
     ]
   end
 
